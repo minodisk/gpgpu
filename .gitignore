@@ -63,3 +63,7 @@ typings/
 # IntelliJ
 .idea
 *.iml
+
+# Codeship
+*.aes
+*.env

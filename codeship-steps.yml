@@ -14,5 +14,7 @@
       command: yarn build
 - name: publish
   service: gpgpu
-  command: yarn publish --non-interactive
+  command: |
+    echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+    npm publish .
   tag: "^v.*/"
