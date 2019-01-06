@@ -1,4 +1,4 @@
-# gpgpu
+# gpgpu [![Codeship Pro][build]](https://app.codeship.com/projects/320617) [![npm version][npm]](https://www.npmjs.com/package/glaph) [![npm type definitions][types]](https://www.typescriptlang.org/) [![License][license]](./LICENSE)
 
 GPGPU with WebGL 2.0 in browser native JavaScript and GLSL
 
@@ -22,3 +22,8 @@ gpgpu.bind(1.5, 2.5)
 console.log(gpgpu.exec([1, 3, 5], [2, 4, 6]))
 // -> [[1.5, 4.5, 7.5], [5, 10, 15]]
 ```
+
+[build]: https://img.shields.io/codeship/cd489ed0-f3a4-0136-9313-4661328143ed/master.svg?style=flat-square
+[license]: https://img.shields.io/github/license/minodisk/gpgpu.svg?style=flat-square
+[npm]: https://img.shields.io/npm/v/gpgpu.svg?style=flat-square
+[types]: https://img.shields.io/npm/types/gpgpu.svg?style=flat-square
