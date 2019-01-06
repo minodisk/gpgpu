@@ -1,0 +1,11 @@
+.circleci/
+.d.ts/
+src/
+test/
+.gitignore
+.prettierrc.json
+jest.config.js
+jest-puppeteer.config.js
+tsconfig.json
+tslint.json
+webpack.config.js
