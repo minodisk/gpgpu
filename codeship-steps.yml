@@ -15,4 +15,4 @@
 - name: publish
   service: gpgpu
   command: yarn publish
-  tag: "^v.*/"
+  tag: "^v.*"
