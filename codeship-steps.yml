@@ -1,6 +1,3 @@
-#- name: ready
-#  service: gpgpu
-#  command: yarn install
 - type: parallel
   steps:
     - name: lint
@@ -17,5 +14,5 @@
       command: yarn build
 - name: publish
   service: gpgpu
-  command: yarn publish
-  tag: /^v.*/
+  command: yarn publish --non-interactive
+  tag: "^v.*/"
