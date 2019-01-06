@@ -25,7 +25,7 @@ describe(`GPGPU`, () => {
 
     it(`multi in, multi uniform, multi out`, async () => {
       const handle = await page.evaluateHandle(() => {
-        const { GPGPU } = window['gpgpu']
+        const { GPGPU } = window.gpgpu
         const gpgpu = GPGPU.create()
         gpgpu.compile(`#version 300 es
 in float in1;

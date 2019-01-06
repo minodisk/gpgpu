@@ -1,5 +1,5 @@
-import { parse } from './parser'
 import { WebGL2RenderingContext, WebGLTransformFeedback } from './GPGPU.d'
+import { parse } from './parser'
 
 export class GPGPU {
   public static create(): GPGPU {
