@@ -1,0 +1,4 @@
+gpgpu:
+  build:
+    dockerfile: Dockerfile
+  cached: true

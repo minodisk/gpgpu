@@ -34,7 +34,7 @@
     "webpack-dev-middleware": "^3.5.0"
   },
   "scripts": {
-    "lint": "tslint '{.storybook,src}/**/*.ts'",
+    "lint": "tslint 'src/**/*.ts'",
     "lint:fix": "yarn lint --fix",
     "format": "prettier '**/*.{ts,js,json,md}'",
     "format:list": "yarn format --list-different",

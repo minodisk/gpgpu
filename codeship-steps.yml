@@ -1,0 +1,21 @@
+#- name: ready
+#  service: gpgpu
+#  command: yarn install
+- type: parallel
+  steps:
+    - name: lint
+      service: gpgpu
+      command: yarn lint
+    - name: format
+      service: gpgpu
+      command: yarn format:list
+    - name: test
+      service: gpgpu
+      command: yarn test
+    - name: build
+      service: gpgpu
+      command: yarn build
+- name: publish
+  service: gpgpu
+  command: yarn publish
+  tag: /^v.*/
