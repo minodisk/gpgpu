@@ -297,4 +297,4 @@ export interface WebGL2RenderingContext extends WebGLRenderingContext {
   ): void
 }
 
-export interface WebGLTransformFeedback {}
+export type WebGLTransformFeedback = void

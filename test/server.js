@@ -1,7 +1,8 @@
+const path = require('path')
 const express = require('express')
 const webpack = require('webpack')
 const middleware = require('webpack-dev-middleware')
-const config = require('../webpack.config.js')
+const config = require(path.join(__dirname, 'webpack.config.js'))
 
 config.output = {
   ...config.output,

@@ -1,6 +1,6 @@
 {
   "name": "gpgpu",
-  "version": "0.0.0",
+  "version": "0.0.3",
   "description": "GPGPU with WebGL 2.0 in browser native JavaScript and GLSL",
   "main": "lib/gpgpu.js",
   "repository": "git@github.com:minodisk/gpgpu.git",
@@ -34,14 +34,13 @@
     "webpack-dev-middleware": "^3.5.0"
   },
   "scripts": {
-    "build": "webpack",
-    "build:watch": "yarn build --watch",
-    "lint": "tslint '{.storybook,src}/**/*.ts'",
+    "lint": "tslint 'src/**/*.ts'",
     "lint:fix": "yarn lint --fix",
     "format": "prettier '**/*.{ts,js,json,md}'",
     "format:list": "yarn format --list-different",
     "format:write": "yarn format --write",
     "test": "jest",
-    "test:serve": "node test/server.js"
+    "test:serve": "node test/server.js",
+    "build": "tsc"
   }
 }

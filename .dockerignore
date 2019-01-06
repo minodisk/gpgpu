@@ -1,0 +1,9 @@
+.git/
+.idea/
+lib/
+node_modules/
+.dockerignore
+.gitignore
+*.aes
+*.env
+*.iml
