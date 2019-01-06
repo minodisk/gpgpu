@@ -12,6 +12,12 @@ jobs:
           keys:
             - v1-dependencies-{{ checksum "yarn.lock" }}
             - v1-dependencies-
+      - run:
+          name: update chrome
+          command: |
+            sudo apt-get install lsb-release
+            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+            sudo dpkg -i google-chrome-stable_current_amd64.deb
       - run: yarn install
       - save_cache:
           paths:
