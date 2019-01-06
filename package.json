@@ -1,0 +1,47 @@
+{
+  "name": "gpgpu",
+  "version": "0.0.0",
+  "description": "GPGPU with WebGL 2.0 in browser native JavaScript and GLSL",
+  "main": "lib/gpgpu.js",
+  "repository": "git@github.com:minodisk/gpgpu.git",
+  "author": "Daisuke Mino <daisuke.mino@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "glsl-tokenizer": "^2.1.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.2.2",
+    "@types/expect-puppeteer": "^3.3.0",
+    "@types/jest-environment-puppeteer": "^2.2.1",
+    "@types/puppeteer": "^1.11.1",
+    "babel-core": "^7.0.0-bridge.0",
+    "babel-jest": "^23.6.0",
+    "babel-preset-power-assert": "^3.0.0",
+    "express": "^4.16.4",
+    "jest": "^23.6.0",
+    "jest-puppeteer": "^3.7.0",
+    "power-assert": "^1.6.1",
+    "prettier": "^1.15.3",
+    "puppeteer": "^1.11.0",
+    "ts-jest": "^23.10.5",
+    "ts-loader": "^5.3.2",
+    "tslint": "^5.12.0",
+    "tslint-config-prettier": "^1.17.0",
+    "tslint-plugin-prettier": "^2.0.1",
+    "typescript": "^3.2.2",
+    "webpack": "^4.28.3",
+    "webpack-cli": "^3.2.0",
+    "webpack-dev-middleware": "^3.5.0"
+  },
+  "scripts": {
+    "build": "webpack",
+    "build:watch": "yarn build --watch",
+    "lint": "tslint '{.storybook,src}/**/*.ts'",
+    "lint:fix": "yarn lint --fix",
+    "format": "prettier '**/*.{ts,js,json,md}'",
+    "format:list": "yarn format --list-different",
+    "format:write": "yarn format --write",
+    "test": "jest",
+    "test:serve": "node test/server.js"
+  }
+}
