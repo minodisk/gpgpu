@@ -3,3 +3,5 @@ gpgpu:
     dockerfile: Dockerfile
   cached: true
   encrypted_env_file: ci.env.encrypted
+  volumes:
+    - ./tmp/lib:/home/repo/lib

@@ -1,4 +1,6 @@
 .circleci/
+.git/
+.idea/
 .d.ts/
 src/
 test/

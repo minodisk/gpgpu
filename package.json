@@ -41,6 +41,7 @@
     "format:write": "yarn format --write",
     "test": "jest",
     "test:serve": "node test/server.js",
-    "build": "webpack"
+    "build": "webpack",
+    "publish": "echo \"//registry.npmjs.org/:_authToken=$NPM_TOKEN\" > .npmrc && npm publish ."
   }
 }

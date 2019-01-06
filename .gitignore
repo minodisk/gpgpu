@@ -60,8 +60,11 @@ typings/
 # next.js build output
 .next
 
+# Built
+lib/
+
 # IntelliJ
-.idea
+.idea/
 *.iml
 
 # Codeship
