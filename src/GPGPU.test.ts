@@ -17,72 +17,72 @@ describe(`GPGPU`, () => {
   })
 
   describe('exec', () => {
-    describe('float', () => {
-      ;[
-        {
-          name: `no uniform, no attribute, no varying`,
-          code: `
-          float res1;
-          void main(void){
-            res1 = 123.0 * 5.0;
-          }
-          `,
-          uniforms: [],
-          attributes: [],
-          expected: [],
-        },
-        {
-          name: `no uniform, no attribute, varying`,
-          code: `
-          out float res1;
-          void main(void){
-            res1 = 1.1 * 5.3;
-          }
-          `,
-          uniforms: [],
-          attributes: [],
-          expected: [[5.830000400543213]],
-        },
-        {
-          name: `uniforms, attributes, varyings`,
-          code: `
-          in float in1;
-          in float in2;
-          uniform float uni1;
-          uniform float uni2;
-          out float res1;
-          out float res2;
-          void main(void){
-            res1 = in1 * uni1;
-            res2 = in2 * uni2;
-          }`,
-          uniforms: [1.5, 2.5],
-          attributes: [[1, 3, 5], [2, 4, 6]],
-          expected: [[1.5, 4.5, 7.5], [5, 10, 15]],
-        },
-      ].forEach(c => {
-        it(c.name, async () => {
-          const handle = await page.evaluateHandle(
-            (code, uniforms, attributes) => {
-              const {
-                gpgpu: { default: GPGPU },
-              } = window
-              const gpgpu = GPGPU.create()
-              gpgpu.compile(`#version 300 es
-        ${code}`)
-              if (uniforms.length) {
-                gpgpu.bind(...uniforms)
-              }
-              return { res: gpgpu.exec(...attributes) }
-            },
-            c.code,
-            c.uniforms,
-            c.attributes,
-          )
-          const props = await handle.getProperty('res')
-          const actual = await props.jsonValue()
-          assert.deepEqual(actual, c.expected)
-        })
+    ;[
+      {
+        name: `none`,
+        code: `
+        float res1;
+        void main(void){
+          res1 = 123.0 * 5.0;
+        }
+        `,
+        uniforms: [],
+        attributes: [],
+        expected: [],
+      },
+      {
+        name: `1 varying`,
+        code: `
+        out float res1;
+        void main(void){
+          res1 = 1.1 * 5.3;
+        }
+        `,
+        uniforms: [],
+        attributes: [],
+        expected: [[5.830000400543213]],
+      },
+      {
+        name: `2 uniforms, 2 attributes, 2 varyings`,
+        code: `
+        in float in1;
+        in float in2;
+        uniform float uni1;
+        uniform float uni2;
+        out float res1;
+        out float res2;
+        void main(void){
+          res1 = in1 * uni1;
+          res2 = in2 * uni2;
+        }`,
+        uniforms: [1.5, 2.5],
+        attributes: [[1, 3, 5], [2, 4, 6]],
+        expected: [[1.5, 4.5, 7.5], [5, 10, 15]],
+      },
+    ].forEach(c => {
+      it(c.name, async () => {
+        const handle = await page.evaluateHandle(
+          (code, uniforms, attributes) => {
+            const {
+              gpgpu: { default: GPGPU },
+            } = window
+            const gpgpu = GPGPU.create()
+            gpgpu.compile(`#version 300 es
+      ${code}`)
+            if (uniforms.length) {
+              gpgpu.bind(...uniforms)
+            }
+            const res = gpgpu.exec(...attributes)
+            console.log(res)
+            return { res }
+          },
+          c.code,
+          c.uniforms,
+          c.attributes,
+        )
+        const props = await handle.getProperty('res')
+        const actual = await props.jsonValue()
+        assert.deepEqual(actual, c.expected)
       })
     })
   })
