@@ -29,7 +29,6 @@ app.use((req, res) => {
     <title>Test for GPGPU</title>
   </head>
   <body>
-    <div id="root"></div>
     ${normalizeAssets(assetsByChunkName.main)
       .filter(path => path.endsWith('.js'))
       .map(path => `<script src="${path}"></script>`)
