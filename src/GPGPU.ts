@@ -1,5 +1,18 @@
 import { WebGL2RenderingContext, WebGLTransformFeedback } from './GPGPU.d'
 import { parse } from './parser'
+import { Node } from './parser.d'
+
+export interface Attribute extends Node {
+  data: WebGLBuffer
+  location: GLint
+  ArrayBuffer: any
+}
+
+export interface Varying extends Node {
+  feedback: WebGLBuffer
+  bytesPerElement: number
+  ArrayBuffer: any
+}
 
 export default class GPGPU {
   public static create(): GPGPU {
@@ -24,14 +37,24 @@ void main(){
 }
 `
 
+  private static bytesPerElementMap = {
+    int: Int32Array.BYTES_PER_ELEMENT,
+    float: Float32Array.BYTES_PER_ELEMENT,
+  }
+
+  private static ArrayBufferMap = {
+    int: Int32Array,
+    float: Float32Array,
+  }
+
   protected program: WebGLProgram
-  protected attributes: Array<{ data: WebGLBuffer; location: GLint }> = []
   protected uniforms: Array<{
     data: WebGLBuffer
     location: WebGLUniformLocation
     type: string
   }> = []
-  protected varyings: Array<{ feedback: WebGLBuffer }> = []
+  protected attributes: Array<Attribute> = []
+  protected varyings: Array<Varying> = []
   protected transformFeedback?: WebGLTransformFeedback
   protected createVertexShader: (source: string) => WebGLShader
   protected createFragmentShader: (source: string) => WebGLShader
@@ -98,30 +121,61 @@ void main(){
           return { data, location, type }
         })
       }
+
       if (attributes != undefined) {
-        this.attributes = attributes.map(({ name }) => {
+        this.attributes = attributes.map(attribute => {
           const data = this.gl.createBuffer()
           if (data == undefined) {
             throw new Error('can not create buffer')
           }
-          const location = this.gl.getAttribLocation(this.program, name)
+          const location = this.gl.getAttribLocation(
+            this.program,
+            attribute.name,
+          )
           this.gl.enableVertexAttribArray(location)
-          this.gl.bindAttribLocation(this.program, location, name)
-          return { data, location }
+          this.gl.bindAttribLocation(this.program, location, attribute.name)
+          return {
+            ...attribute,
+            data,
+            location,
+            ArrayBuffer: GPGPU.ArrayBufferMap[attribute.type],
+          }
         })
       }
+
       if (varyings != undefined) {
         this.transformFeedback = this.gl.createTransformFeedback()
-        this.varyings = varyings.map(() => {
+        this.varyings = varyings.map(varying => {
           const feedback = this.gl.createBuffer()
           if (feedback == undefined) {
             throw new Error(`feedback buffer can not be created`)
           }
+          const bytesPerElement = GPGPU.bytesPerElementMap[varying.type]
+          if (bytesPerElement == undefined) {
+            throw new Error(
+              `bytes per element for varying ${varying.name}(${
+                varying.type
+              }) is not defined`,
+            )
+          }
+          const ArrayBuffer = GPGPU.ArrayBufferMap[varying.type]
+          if (ArrayBuffer == undefined) {
+            throw new Error(
+              `array buffer constructor for varying ${varying.name}(${
+                varying.type
+              }) is not defined`,
+            )
+          }
           return {
+            ...varying,
             feedback,
+            bytesPerElement,
+            ArrayBuffer,
           }
         })
       }
+
+      this.gl.useProgram(null)
     } catch (err) {
       throw new Error(`compile error: ${err.toString()}`)
     }
@@ -160,24 +214,25 @@ void main(){
     try {
       let drawCount = 1
 
-      if (attributes != undefined) {
-        attributes.forEach((attribute, i) => {
-          drawCount = Math.max(drawCount, attribute.length)
-          const { data, location } = this.attributes[i]
-          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, data)
-          this.gl.vertexAttribPointer(location, 1, this.gl.FLOAT, false, 0, 0) // TODO: support vec2, vec3 or vec4
-          this.gl.bufferData(
-            this.gl.ARRAY_BUFFER,
-            new Float32Array(attribute),
-            this.gl.STATIC_DRAW,
-          )
-        })
-      }
-      this.varyings.forEach(({ feedback }) => {
+      // bind attributes
+      this.attributes.forEach(({ data, location, ArrayBuffer }, i) => {
+        const attribute = attributes[i]
+        drawCount = Math.max(drawCount, attribute.length)
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, data)
+        this.gl.vertexAttribPointer(location, 1, this.gl.FLOAT, false, 0, 0) // TODO: support vec2, vec3 or vec4
+        this.gl.bufferData(
+          this.gl.ARRAY_BUFFER,
+          new ArrayBuffer(attribute),
+          this.gl.STATIC_DRAW,
+        )
+      })
+
+      // bind varyings
+      this.varyings.forEach(({ feedback, bytesPerElement }) => {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
         this.gl.bufferData(
           this.gl.ARRAY_BUFFER,
-          Float32Array.BYTES_PER_ELEMENT * drawCount,
+          bytesPerElement * drawCount,
           this.gl.STATIC_COPY,
         )
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
@@ -208,10 +263,10 @@ void main(){
       }
       this.gl.useProgram(null)
 
-      // capture response
-      return this.varyings.map(({ feedback }, i) => {
+      // capture varyings
+      return this.varyings.map(({ feedback, ArrayBuffer }, i) => {
         this.gl.bindBufferBase(this.gl.TRANSFORM_FEEDBACK_BUFFER, i, null)
-        const buf = new Float32Array(drawCount)
+        const buf = new ArrayBuffer(drawCount)
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
         this.gl.getBufferSubData(this.gl.ARRAY_BUFFER, 0, buf)
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
