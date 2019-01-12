@@ -2,6 +2,12 @@ import { WebGL2RenderingContext, WebGLTransformFeedback } from './GPGPU.d'
 import { parse } from './parser'
 import { Node } from './parser.d'
 
+export interface Uniform extends Node {
+  data: WebGLBuffer
+  location: WebGLUniformLocation
+  transform: any
+}
+
 export interface Attribute extends Node {
   buffer: WebGLBuffer
   location: GLint
@@ -49,32 +55,44 @@ void main(){
   private static dimMap = {
     int: 1,
     float: 1,
+    vec1: 1,
+    vec2: 2,
+    vec3: 3,
     vec4: 4,
   }
 
   private static bytesPerElementMap = {
     int: Int32Array.BYTES_PER_ELEMENT,
     float: Float32Array.BYTES_PER_ELEMENT,
+    vec1: Float32Array.BYTES_PER_ELEMENT,
+    vec2: Float32Array.BYTES_PER_ELEMENT,
+    vec3: Float32Array.BYTES_PER_ELEMENT,
     vec4: Float32Array.BYTES_PER_ELEMENT,
   }
 
   private static ArrayBufferMap = {
     int: Int32Array,
     float: Float32Array,
+    vec1: Float32Array,
+    vec2: Float32Array,
+    vec3: Float32Array,
     vec4: Float32Array,
   }
 
   protected program: WebGLProgram
-  protected uniforms: Array<{
-    data: WebGLBuffer
-    location: WebGLUniformLocation
-    type: string
-  }> = []
+  protected uniforms: Array<Uniform> = []
   protected attributes: Array<Attribute> = []
   protected varyings: Array<Varying> = []
   protected transformFeedback?: WebGLTransformFeedback
   protected createVertexShader: (source: string) => WebGLShader
   protected createFragmentShader: (source: string) => WebGLShader
+  protected uniformTransformMap: {
+    int: (location: WebGLUniformLocation | null, x: GLint) => void
+    vec1: (location: WebGLUniformLocation | null, v: Float32List) => void
+    vec2: (location: WebGLUniformLocation | null, v: Float32List) => void
+    vec3: (location: WebGLUniformLocation | null, v: Float32List) => void
+    vec4: (location: WebGLUniformLocation | null, v: Float32List) => void
+  }
 
   constructor(protected gl: WebGL2RenderingContext) {
     this.createVertexShader = this.createShader(this.gl.VERTEX_SHADER)
@@ -86,6 +104,15 @@ void main(){
       throw new Error(`program can not be created`)
     }
     this.program = program
+
+    // uniform transform functions
+    this.uniformTransformMap = {
+      int: this.gl.uniform1i.bind(this.gl),
+      vec1: this.gl.uniform1fv.bind(this.gl),
+      vec2: this.gl.uniform2fv.bind(this.gl),
+      vec3: this.gl.uniform3fv.bind(this.gl),
+      vec4: this.gl.uniform4fv.bind(this.gl),
+    }
   }
 
   public compile(source: string) {
@@ -126,16 +153,24 @@ void main(){
       this.gl.useProgram(this.program)
 
       if (uniforms != undefined) {
-        this.uniforms = uniforms.map(({ type, name }) => {
+        this.uniforms = uniforms.map(uniform => {
           const data = this.gl.createBuffer()
           if (data == undefined) {
             throw new Error('can not create buffer')
           }
-          const location = this.gl.getUniformLocation(this.program, name)
+          const location = this.gl.getUniformLocation(
+            this.program,
+            uniform.name,
+          )
           if (location == undefined) {
             throw new Error('can not get uniform location')
           }
-          return { data, location, type }
+          return {
+            ...uniform,
+            data,
+            location,
+            transform: this.uniformTransformMap[uniform.type],
+          }
         })
       }
 
@@ -209,23 +244,8 @@ void main(){
         }, but specified ${uniforms.length}`,
       )
     }
-    this.uniforms.forEach(({ location, type }, i) => {
-      const value = uniforms[i]
-      switch (type) {
-        case 'int':
-        case 'bool':
-          if (typeof value !== 'number') {
-            throw new Error(`uniform ${value} at ${i} should be number`)
-          }
-          this.gl.uniform1i(location, value)
-          break
-        case 'float':
-          if (typeof value !== 'number') {
-            throw new Error(`uniform ${value} at ${i} should be number`)
-          }
-          this.gl.uniform1f(location, value)
-          break
-      }
+    this.uniforms.forEach(({ location, transform }, i) => {
+      transform(location, uniforms[i])
     })
   }
 
