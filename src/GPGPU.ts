@@ -253,7 +253,7 @@ void main(){
         const attribute = attributes[i]
         drawCount = Math.max(drawCount, attribute.length)
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer)
-        this.gl.vertexAttribPointer(location, dim, this.gl.FLOAT, false, 0, 0) // TODO: support vec2, vec3 or vec4
+        this.gl.vertexAttribPointer(location, dim, this.gl.FLOAT, false, 0, 0)
         this.gl.bufferData(
           this.gl.ARRAY_BUFFER,
           new ArrayBuffer(attribute.flat()),
