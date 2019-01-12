@@ -85,6 +85,7 @@ void main(){
   protected createFragmentShader: (source: string) => WebGLShader
   protected uniformTransformMap: {
     int: (location: WebGLUniformLocation | null, x: GLint) => void
+    float: (location: WebGLUniformLocation | null, x: GLfloat) => void
     vec2: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec3: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec4: (location: WebGLUniformLocation | null, v: Float32List) => void
@@ -104,6 +105,7 @@ void main(){
     // uniform transform functions
     this.uniformTransformMap = {
       int: this.gl.uniform1i.bind(this.gl),
+      float: this.gl.uniform1f.bind(this.gl),
       vec2: this.gl.uniform2fv.bind(this.gl),
       vec3: this.gl.uniform3fv.bind(this.gl),
       vec4: this.gl.uniform4fv.bind(this.gl),
