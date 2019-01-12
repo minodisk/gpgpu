@@ -1,4 +1,4 @@
-# gpgpu [![Codeship Pro][build]](https://app.codeship.com/projects/320617) [![npm version][npm]](https://www.npmjs.com/package/glaph) [![npm type definitions][types]](https://www.typescriptlang.org/) [![License][license]](./LICENSE)
+# gpgpu [![Codeship Pro][build]](https://app.codeship.com/projects/320617) [![npm version][npm]](https://www.npmjs.com/package/gpgpu) [![npm type definitions][types]](https://www.typescriptlang.org/) [![License][license]](./LICENSE)
 
 GPGPU with WebGL 2.0 in browser native JavaScript and GLSL
 
