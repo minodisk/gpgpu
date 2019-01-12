@@ -15,4 +15,4 @@
 - name: publish
   service: gpgpu
   command: sh -c "npm config set '//registry.npmjs.org/:_authToken' $NPM_TOKEN && npm publish ."
-  tag: "^v.*"
+  tag: "^v[\\d\\.]+"
