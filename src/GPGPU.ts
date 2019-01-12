@@ -2,14 +2,22 @@ import { WebGL2RenderingContext, WebGLTransformFeedback } from './GPGPU.d'
 import { parse } from './parser'
 import { Node } from './parser.d'
 
-export interface Attribute extends Node {
+export interface Uniform extends Node {
   data: WebGLBuffer
+  location: WebGLUniformLocation
+  transform: any
+}
+
+export interface Attribute extends Node {
+  buffer: WebGLBuffer
   location: GLint
+  dim: number
   ArrayBuffer: any
 }
 
 export interface Varying extends Node {
   feedback: WebGLBuffer
+  dim: number
   bytesPerElement: number
   ArrayBuffer: any
 }
@@ -29,6 +37,14 @@ export default class GPGPU {
     return new GPGPU(context)
   }
 
+  public static dim(type: string): number {
+    const dim = GPGPU.dimMap[type]
+    if (dim == undefined) {
+      throw new Error(`dim for ${type} is not defined`)
+    }
+    return dim
+  }
+
   private static dummyFragmentShaderSource = `#version 300 es
 precision highp float;
 out vec4 color;
@@ -36,28 +52,44 @@ void main(){
   color = vec4(1.0);
 }
 `
+  private static dimMap = {
+    int: 1,
+    float: 1,
+    vec2: 2,
+    vec3: 3,
+    vec4: 4,
+  }
 
   private static bytesPerElementMap = {
     int: Int32Array.BYTES_PER_ELEMENT,
     float: Float32Array.BYTES_PER_ELEMENT,
+    vec2: Float32Array.BYTES_PER_ELEMENT,
+    vec3: Float32Array.BYTES_PER_ELEMENT,
+    vec4: Float32Array.BYTES_PER_ELEMENT,
   }
 
   private static ArrayBufferMap = {
     int: Int32Array,
     float: Float32Array,
+    vec2: Float32Array,
+    vec3: Float32Array,
+    vec4: Float32Array,
   }
 
   protected program: WebGLProgram
-  protected uniforms: Array<{
-    data: WebGLBuffer
-    location: WebGLUniformLocation
-    type: string
-  }> = []
+  protected uniforms: Array<Uniform> = []
   protected attributes: Array<Attribute> = []
   protected varyings: Array<Varying> = []
   protected transformFeedback?: WebGLTransformFeedback
   protected createVertexShader: (source: string) => WebGLShader
   protected createFragmentShader: (source: string) => WebGLShader
+  protected uniformTransformMap: {
+    int: (location: WebGLUniformLocation | null, x: GLint) => void
+    float: (location: WebGLUniformLocation | null, x: GLfloat) => void
+    vec2: (location: WebGLUniformLocation | null, v: Float32List) => void
+    vec3: (location: WebGLUniformLocation | null, v: Float32List) => void
+    vec4: (location: WebGLUniformLocation | null, v: Float32List) => void
+  }
 
   constructor(protected gl: WebGL2RenderingContext) {
     this.createVertexShader = this.createShader(this.gl.VERTEX_SHADER)
@@ -69,6 +101,15 @@ void main(){
       throw new Error(`program can not be created`)
     }
     this.program = program
+
+    // uniform transform functions
+    this.uniformTransformMap = {
+      int: this.gl.uniform1i.bind(this.gl),
+      float: this.gl.uniform1f.bind(this.gl),
+      vec2: this.gl.uniform2fv.bind(this.gl),
+      vec3: this.gl.uniform3fv.bind(this.gl),
+      vec4: this.gl.uniform4fv.bind(this.gl),
+    }
   }
 
   public compile(source: string) {
@@ -109,23 +150,31 @@ void main(){
       this.gl.useProgram(this.program)
 
       if (uniforms != undefined) {
-        this.uniforms = uniforms.map(({ type, name }) => {
+        this.uniforms = uniforms.map(uniform => {
           const data = this.gl.createBuffer()
           if (data == undefined) {
             throw new Error('can not create buffer')
           }
-          const location = this.gl.getUniformLocation(this.program, name)
+          const location = this.gl.getUniformLocation(
+            this.program,
+            uniform.name,
+          )
           if (location == undefined) {
             throw new Error('can not get uniform location')
           }
-          return { data, location, type }
+          return {
+            ...uniform,
+            data,
+            location,
+            transform: this.uniformTransformMap[uniform.type],
+          }
         })
       }
 
       if (attributes != undefined) {
         this.attributes = attributes.map(attribute => {
-          const data = this.gl.createBuffer()
-          if (data == undefined) {
+          const buffer = this.gl.createBuffer()
+          if (buffer == undefined) {
             throw new Error('can not create buffer')
           }
           const location = this.gl.getAttribLocation(
@@ -136,8 +185,9 @@ void main(){
           this.gl.bindAttribLocation(this.program, location, attribute.name)
           return {
             ...attribute,
-            data,
+            buffer,
             location,
+            dim: GPGPU.dim(attribute.type),
             ArrayBuffer: GPGPU.ArrayBufferMap[attribute.type],
           }
         })
@@ -169,6 +219,7 @@ void main(){
           return {
             ...varying,
             feedback,
+            dim: GPGPU.dim(varying.type),
             bytesPerElement,
             ArrayBuffer,
           }
@@ -190,49 +241,34 @@ void main(){
         }, but specified ${uniforms.length}`,
       )
     }
-    this.uniforms.forEach(({ location, type }, i) => {
-      const value = uniforms[i]
-      switch (type) {
-        case 'int':
-        case 'bool':
-          if (typeof value !== 'number') {
-            throw new Error(`uniform ${value} at ${i} should be number`)
-          }
-          this.gl.uniform1i(location, value)
-          break
-        case 'float':
-          if (typeof value !== 'number') {
-            throw new Error(`uniform ${value} at ${i} should be number`)
-          }
-          this.gl.uniform1f(location, value)
-          break
-      }
+    this.uniforms.forEach(({ location, transform }, i) => {
+      transform(location, uniforms[i])
     })
   }
 
-  public exec(...attributes: Array<Array<number>>): Array<Float32Array> {
+  public exec(...attributes: Array<Array<number>>): Array<any> {
     try {
       let drawCount = 1
 
       // bind attributes
-      this.attributes.forEach(({ data, location, ArrayBuffer }, i) => {
+      this.attributes.forEach(({ buffer, location, dim, ArrayBuffer }, i) => {
         const attribute = attributes[i]
         drawCount = Math.max(drawCount, attribute.length)
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, data)
-        this.gl.vertexAttribPointer(location, 1, this.gl.FLOAT, false, 0, 0) // TODO: support vec2, vec3 or vec4
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer)
+        this.gl.vertexAttribPointer(location, dim, this.gl.FLOAT, false, 0, 0)
         this.gl.bufferData(
           this.gl.ARRAY_BUFFER,
-          new ArrayBuffer(attribute),
+          new ArrayBuffer(attribute.flat()),
           this.gl.STATIC_DRAW,
         )
       })
 
       // bind varyings
-      this.varyings.forEach(({ feedback, bytesPerElement }) => {
+      this.varyings.forEach(({ feedback, dim, bytesPerElement }) => {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
         this.gl.bufferData(
           this.gl.ARRAY_BUFFER,
-          bytesPerElement * drawCount,
+          bytesPerElement * dim * drawCount,
           this.gl.STATIC_COPY,
         )
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
@@ -264,14 +300,25 @@ void main(){
       this.gl.useProgram(null)
 
       // capture varyings
-      return this.varyings.map(({ feedback, ArrayBuffer }, i) => {
-        this.gl.bindBufferBase(this.gl.TRANSFORM_FEEDBACK_BUFFER, i, null)
-        const buf = new ArrayBuffer(drawCount)
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
-        this.gl.getBufferSubData(this.gl.ARRAY_BUFFER, 0, buf)
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
-        return Array.prototype.map.call(buf, (value: number) => value)
-      })
+      return this.varyings.map(
+        ({ feedback, dim, bytesPerElement, ArrayBuffer }, i) => {
+          this.gl.bindBufferBase(this.gl.TRANSFORM_FEEDBACK_BUFFER, i, null)
+          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
+          const values = Array.from(new Array(drawCount)).map((_, j) => {
+            const buf = new ArrayBuffer(dim)
+            this.gl.getBufferSubData(
+              this.gl.ARRAY_BUFFER,
+              bytesPerElement * dim * j,
+              buf,
+            )
+            return dim === 1
+              ? buf[0]
+              : Array.prototype.map.call(buf, (value: number) => value)
+          })
+          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
+          return values
+        },
+      )
     } catch (err) {
       throw new Error(`ExecError: ${err.toString()}`)
     }
