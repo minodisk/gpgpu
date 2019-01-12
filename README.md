@@ -31,33 +31,50 @@ yarn add gpgpu
 
 ## API
 
-### `GPGPU.create(): GPGPU`
+### Static
+
+#### `GPGPU.create(): GPGPU`
 
 Create `GPGPU` instance. A new `HTMLCanvasElement` is created internally.
 
 - Throws exception when `WebGl2RenderingContext` isn't support in the browser.
 
-### `GPGPU.createWithCanvas(canvas: HTMLCanvasElement): GPGPU`
+#### `GPGPU.createWithCanvas(canvas: HTMLCanvasElement): GPGPU`
 
 Create `GPGPU` instance with `HTMLCanvasElement`.
 
 - Throws exception when `WebGL2RenderingContext` isn't support in the browser.
 
-### `new GPGPU(context: WebGL2RenderingContext): GPGPU`
+### Constructor
+
+#### `new GPGPU(context: WebGL2RenderingContext): GPGPU`
 
 Create `GPGPU` instance with `WebGL2RenderingContext`.
 
-### `GPGPU#compile(source: string)`
+### Member
+
+#### `compile(source: string)`
 
 Parse source code written in GLSL and ready buffers for `attributes`, `uniforms` and `varyings`.
 
-### `GPGPU#bind(...uniforms: Array<boolean | number | Array<number>>)`
+#### `bind(...uniforms: Array<boolean | number | Array<number>>)`
 
 Binds uniform value.
 
-### `GPGPU#exec(...attributes: Array<Array<number>>): Array<number>`
+#### `exec(...attributes: Array<Array<number>>): Array<number>`
 
 Execute GLSL program with `attributes` and returns feedback transformed results.
+
+## Contribution
+
+1. Fork ([https://github.com/minodisk/gpgpu/fork](https://github.com/minodisk/gpgpu/fork))
+2. Create a feature branch
+3. Commit your changes
+4. Rebase your local changes against the master branch
+5. Run test suite with the `yarn test` command and confirm that it passes
+6. Run linter with the `yarn lint` command and confirm that it passes
+7. Run formatter with the `yarn format:write` command
+8. Create new Pull Request
 
 [build]: https://img.shields.io/codeship/cd489ed0-f3a4-0136-9313-4661328143ed/master.svg?style=flat-square
 [license]: https://img.shields.io/github/license/minodisk/gpgpu.svg?style=flat-square
