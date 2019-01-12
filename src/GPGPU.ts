@@ -55,7 +55,6 @@ void main(){
   private static dimMap = {
     int: 1,
     float: 1,
-    vec1: 1,
     vec2: 2,
     vec3: 3,
     vec4: 4,
@@ -64,7 +63,6 @@ void main(){
   private static bytesPerElementMap = {
     int: Int32Array.BYTES_PER_ELEMENT,
     float: Float32Array.BYTES_PER_ELEMENT,
-    vec1: Float32Array.BYTES_PER_ELEMENT,
     vec2: Float32Array.BYTES_PER_ELEMENT,
     vec3: Float32Array.BYTES_PER_ELEMENT,
     vec4: Float32Array.BYTES_PER_ELEMENT,
@@ -73,7 +71,6 @@ void main(){
   private static ArrayBufferMap = {
     int: Int32Array,
     float: Float32Array,
-    vec1: Float32Array,
     vec2: Float32Array,
     vec3: Float32Array,
     vec4: Float32Array,
@@ -88,7 +85,6 @@ void main(){
   protected createFragmentShader: (source: string) => WebGLShader
   protected uniformTransformMap: {
     int: (location: WebGLUniformLocation | null, x: GLint) => void
-    vec1: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec2: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec3: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec4: (location: WebGLUniformLocation | null, v: Float32List) => void
@@ -108,7 +104,6 @@ void main(){
     // uniform transform functions
     this.uniformTransformMap = {
       int: this.gl.uniform1i.bind(this.gl),
-      vec1: this.gl.uniform1fv.bind(this.gl),
       vec2: this.gl.uniform2fv.bind(this.gl),
       vec3: this.gl.uniform3fv.bind(this.gl),
       vec4: this.gl.uniform4fv.bind(this.gl),

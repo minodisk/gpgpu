@@ -138,46 +138,67 @@ describe(`GPGPU`, () => {
       ].forEach(c => test<number, number, number>(c))
     })
 
-    describe('vec4', () => {
+    describe('types', () => {
       ;[
         {
-          name: 'out1',
+          name: 'vec2',
           code: `
-          out vec4 out1;
-          void main(void) {
-            out1 = vec4(1.0, 2.0, 3.0, 4.0);
-          }
-          `,
-          uniforms: [],
-          attributes: [],
-          expected: [[[1, 2, 3, 4]]],
-        },
-        {
-          name: 'in1, out1',
-          code: `
-          in vec4 in1;
-          out vec4 out1;
-          void main(void) {
-            out1 = in1;
-          }
-          `,
-          uniforms: [],
-          attributes: [[[1, 2, 3, 4]]],
-          expected: [[[1, 2, 3, 4]]],
-        },
-        {
-          name: 'uni1, in1, out1',
-          code: `
-          uniform vec4 uni1;
-          in vec4 in1;
-          out vec4 out1;
+          uniform vec2 uni1;
+          uniform vec2 uni2;
+          in vec2 in1;
+          in vec2 in2;
+          out vec2 out1;
+          out vec2 out2;
           void main(void) {
             out1 = uni1 + in1;
+            out2 = uni2 + out1 + in2;
           }
           `,
-          uniforms: [[1, 1, 1, 1]],
-          attributes: [[[1, 2, 3, 4]]],
-          expected: [[[2, 3, 4, 5]]],
+          uniforms: [[1, 1], [3, 9]],
+          attributes: [[[1, 2], [6, 4]], [[5, 2], [10, 3]]],
+          expected: [[[2, 3], [7, 5]], [[10, 14], [20, 17]]],
+        },
+        {
+          name: 'vec3',
+          code: `
+          uniform vec3 uni1;
+          uniform vec3 uni2;
+          in vec3 in1;
+          in vec3 in2;
+          out vec3 out1;
+          out vec3 out2;
+          void main(void) {
+            out1 = uni1 + in1;
+            out2 = uni2 + out1 + in2;
+          }
+          `,
+          uniforms: [[1, 1, 1], [3, 9, 2]],
+          attributes: [[[1, 2, 3], [6, 4, 1]], [[5, 2, 3], [10, 3, 7]]],
+          expected: [[[2, 3, 4], [7, 5, 2]], [[10, 14, 9], [20, 17, 11]]],
+        },
+        {
+          name: 'vec4',
+          code: `
+          uniform vec4 uni1;
+          uniform vec4 uni2;
+          in vec4 in1;
+          in vec4 in2;
+          out vec4 out1;
+          out vec4 out2;
+          void main(void) {
+            out1 = uni1 + in1;
+            out2 = uni2 + out1 + in2;
+          }
+          `,
+          uniforms: [[1, 1, 1, 1], [3, 9, 2, 1]],
+          attributes: [
+            [[1, 2, 3, 4], [6, 4, 1, 9]],
+            [[5, 2, 3, 1], [10, 3, 7, 4]],
+          ],
+          expected: [
+            [[2, 3, 4, 5], [7, 5, 2, 10]],
+            [[10, 14, 9, 7], [20, 17, 11, 15]],
+          ],
         },
       ].forEach(c => test<Array<number>, Array<number>, Array<number>>(c))
     })
