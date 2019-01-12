@@ -10,6 +10,7 @@ export interface Attribute extends Node {
 
 export interface Varying extends Node {
   feedback: WebGLBuffer
+  dim: number
   bytesPerElement: number
   ArrayBuffer: any
 }
@@ -37,14 +38,22 @@ void main(){
 }
 `
 
+  private static dimMap = {
+    int: 1,
+    float: 1,
+    vec4: 4,
+  }
+
   private static bytesPerElementMap = {
     int: Int32Array.BYTES_PER_ELEMENT,
     float: Float32Array.BYTES_PER_ELEMENT,
+    vec4: Float32Array.BYTES_PER_ELEMENT,
   }
 
   private static ArrayBufferMap = {
     int: Int32Array,
     float: Float32Array,
+    vec4: Float32Array,
   }
 
   protected program: WebGLProgram
@@ -150,6 +159,12 @@ void main(){
           if (feedback == undefined) {
             throw new Error(`feedback buffer can not be created`)
           }
+          const dim = GPGPU.dimMap[varying.type]
+          if (dim == undefined) {
+            throw new Error(
+              `dim for varying ${varying.name}(${varying.type}) is not defined`,
+            )
+          }
           const bytesPerElement = GPGPU.bytesPerElementMap[varying.type]
           if (bytesPerElement == undefined) {
             throw new Error(
@@ -169,6 +184,7 @@ void main(){
           return {
             ...varying,
             feedback,
+            dim,
             bytesPerElement,
             ArrayBuffer,
           }
@@ -210,7 +226,7 @@ void main(){
     })
   }
 
-  public exec(...attributes: Array<Array<number>>): Array<Float32Array> {
+  public exec(...attributes: Array<Array<number>>): Array<any> {
     try {
       let drawCount = 1
 
@@ -228,11 +244,11 @@ void main(){
       })
 
       // bind varyings
-      this.varyings.forEach(({ feedback, bytesPerElement }) => {
+      this.varyings.forEach(({ feedback, dim, bytesPerElement }) => {
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
         this.gl.bufferData(
           this.gl.ARRAY_BUFFER,
-          bytesPerElement * drawCount,
+          bytesPerElement * dim * drawCount,
           this.gl.STATIC_COPY,
         )
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
@@ -264,14 +280,25 @@ void main(){
       this.gl.useProgram(null)
 
       // capture varyings
-      return this.varyings.map(({ feedback, ArrayBuffer }, i) => {
-        this.gl.bindBufferBase(this.gl.TRANSFORM_FEEDBACK_BUFFER, i, null)
-        const buf = new ArrayBuffer(drawCount)
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
-        this.gl.getBufferSubData(this.gl.ARRAY_BUFFER, 0, buf)
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
-        return Array.prototype.map.call(buf, (value: number) => value)
-      })
+      return this.varyings.map(
+        ({ feedback, dim, bytesPerElement, ArrayBuffer }, i) => {
+          this.gl.bindBufferBase(this.gl.TRANSFORM_FEEDBACK_BUFFER, i, null)
+          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
+          const values = Array.from(new Array(drawCount)).map((_, j) => {
+            const buf = new ArrayBuffer(dim)
+            this.gl.getBufferSubData(
+              this.gl.ARRAY_BUFFER,
+              bytesPerElement * dim * j,
+              buf,
+            )
+            return dim === 1
+              ? buf[0]
+              : Array.prototype.map.call(buf, (value: number) => value)
+          })
+          this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null)
+          return values
+        },
+      )
     } catch (err) {
       throw new Error(`ExecError: ${err.toString()}`)
     }
