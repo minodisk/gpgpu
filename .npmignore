@@ -1,11 +1,10 @@
-.git/
 .idea/
 .d.ts/
 src/
 test/
 .dockerignore
 .gitignore
-.npmrc
+.prettierignore
 .prettierrc.json
 Dockerfile
 jest.config.js
