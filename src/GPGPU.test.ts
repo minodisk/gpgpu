@@ -141,7 +141,7 @@ describe(`GPGPU`, () => {
     describe('vec4', () => {
       ;[
         {
-          name: 'out 1',
+          name: 'out1',
           code: `
           out vec4 out1;
           void main(void) {
@@ -150,6 +150,19 @@ describe(`GPGPU`, () => {
           `,
           uniforms: [],
           attributes: [],
+          expected: [[[1, 2, 3, 4]]],
+        },
+        {
+          name: 'in1, out1',
+          code: `
+          in vec4 in1;
+          out vec4 out1;
+          void main(void) {
+            out1 = in1;
+          }
+          `,
+          uniforms: [],
+          attributes: [[[1, 2, 3, 4]]],
           expected: [[[1, 2, 3, 4]]],
         },
       ].forEach(c => test<Array<number>, Array<number>, Array<number>>(c))

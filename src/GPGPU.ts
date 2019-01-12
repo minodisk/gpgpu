@@ -3,8 +3,9 @@ import { parse } from './parser'
 import { Node } from './parser.d'
 
 export interface Attribute extends Node {
-  data: WebGLBuffer
+  buffer: WebGLBuffer
   location: GLint
+  dim: number
   ArrayBuffer: any
 }
 
@@ -30,6 +31,14 @@ export default class GPGPU {
     return new GPGPU(context)
   }
 
+  public static dim(type: string): number {
+    const dim = GPGPU.dimMap[type]
+    if (dim == undefined) {
+      throw new Error(`dim for ${type} is not defined`)
+    }
+    return dim
+  }
+
   private static dummyFragmentShaderSource = `#version 300 es
 precision highp float;
 out vec4 color;
@@ -37,7 +46,6 @@ void main(){
   color = vec4(1.0);
 }
 `
-
   private static dimMap = {
     int: 1,
     float: 1,
@@ -133,8 +141,8 @@ void main(){
 
       if (attributes != undefined) {
         this.attributes = attributes.map(attribute => {
-          const data = this.gl.createBuffer()
-          if (data == undefined) {
+          const buffer = this.gl.createBuffer()
+          if (buffer == undefined) {
             throw new Error('can not create buffer')
           }
           const location = this.gl.getAttribLocation(
@@ -145,8 +153,9 @@ void main(){
           this.gl.bindAttribLocation(this.program, location, attribute.name)
           return {
             ...attribute,
-            data,
+            buffer,
             location,
+            dim: GPGPU.dim(attribute.type),
             ArrayBuffer: GPGPU.ArrayBufferMap[attribute.type],
           }
         })
@@ -158,12 +167,6 @@ void main(){
           const feedback = this.gl.createBuffer()
           if (feedback == undefined) {
             throw new Error(`feedback buffer can not be created`)
-          }
-          const dim = GPGPU.dimMap[varying.type]
-          if (dim == undefined) {
-            throw new Error(
-              `dim for varying ${varying.name}(${varying.type}) is not defined`,
-            )
           }
           const bytesPerElement = GPGPU.bytesPerElementMap[varying.type]
           if (bytesPerElement == undefined) {
@@ -184,7 +187,7 @@ void main(){
           return {
             ...varying,
             feedback,
-            dim,
+            dim: GPGPU.dim(varying.type),
             bytesPerElement,
             ArrayBuffer,
           }
@@ -231,14 +234,14 @@ void main(){
       let drawCount = 1
 
       // bind attributes
-      this.attributes.forEach(({ data, location, ArrayBuffer }, i) => {
+      this.attributes.forEach(({ buffer, location, dim, ArrayBuffer }, i) => {
         const attribute = attributes[i]
         drawCount = Math.max(drawCount, attribute.length)
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, data)
-        this.gl.vertexAttribPointer(location, 1, this.gl.FLOAT, false, 0, 0) // TODO: support vec2, vec3 or vec4
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer)
+        this.gl.vertexAttribPointer(location, dim, this.gl.FLOAT, false, 0, 0) // TODO: support vec2, vec3 or vec4
         this.gl.bufferData(
           this.gl.ARRAY_BUFFER,
-          new ArrayBuffer(attribute),
+          new ArrayBuffer(attribute.flat()),
           this.gl.STATIC_DRAW,
         )
       })
