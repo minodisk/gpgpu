@@ -1,5 +1,11 @@
 import * as assert from 'assert'
 
+declare global {
+  interface Window {
+    gpgpu: any
+  }
+}
+
 interface Case<U, A, E> {
   name: string
   code: string
@@ -12,10 +18,8 @@ const test = <U, A, E>(c: Case<U, A, E>) => {
   it(c.name, async () => {
     const handle = await page.evaluateHandle(
       (code, uniforms, attributes) => {
-        const {
-          gpgpu: { default: GPGPU },
-        } = window
-        const gpgpu = GPGPU.create()
+        const { gpgpu: GPGPU } = window
+        const gpgpu = GPGPU.create(document.createElement('canvas'))
         gpgpu.compile(`#version 300 es
         ${code}`)
         if (uniforms.length) {

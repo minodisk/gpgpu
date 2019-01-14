@@ -4,9 +4,22 @@ GPGPU with WebGL 2.0 in browser native JavaScript and GLSL
 
 ## Usage
 
+### Import
+
 ```js
-import GPGPU from 'gpgpu'
-const gpgpu = GPGPU.create()
+import * as GPGPU from 'gpgpu'
+```
+
+or
+
+```js
+const GPGPU = require('gpgpu')
+```
+
+### Execution
+
+```js
+const gpgpu = GPGPU.create(document.createElement('canvas'))
 gpgpu.compile(`#version 300 es
 in float in1;
 in float in2;
@@ -26,6 +39,12 @@ console.log(gpgpu.exec([1, 3, 5], [2, 4, 6]))
 ## Installation
 
 ```sh
+npm install --save gpgpu
+```
+
+or
+
+```sh
 yarn add gpgpu
 ```
 
@@ -33,17 +52,11 @@ yarn add gpgpu
 
 ### Static
 
-#### `GPGPU.create(): GPGPU`
-
-Create `GPGPU` instance. A new `HTMLCanvasElement` is created internally.
-
-- Throws exception when `WebGl2RenderingContext` isn't support in the browser.
-
-#### `GPGPU.createWithCanvas(canvas: HTMLCanvasElement): GPGPU`
+#### `GPGPU.create(canvas: HTMLCanvasElement): GPGPU`
 
 Create `GPGPU` instance with `HTMLCanvasElement`.
 
-- Throws exception when `WebGL2RenderingContext` isn't support in the browser.
+- Throws exception when `WebGL2RenderingContext` isn't supported in the browser.
 
 ### Constructor
 
@@ -55,15 +68,24 @@ Create `GPGPU` instance with `WebGL2RenderingContext`.
 
 #### `compile(source: string)`
 
-Parse source code written in GLSL and ready buffers for `attributes`, `uniforms` and `varyings`.
+Parse GLSL program and ready buffers for `attributes`, `uniforms` and `varyings`.
 
 #### `bind(...uniforms: Array<boolean | number | Array<number>>)`
 
-Binds uniform value.
+Binds uniform values.
 
 #### `exec(...attributes: Array<Array<number>>): Array<number>`
 
-Execute GLSL program with `attributes` and returns feedback transformed results.
+Execute GLSL program with `attributes` and returns transformed results.
+
+## Types
+
+|GLSL Type|JavaScript Type|
+|:--|:--|
+|`int`,`float`|`number`|
+|`vec2`|`[number, number]`|
+|`vec3`|`[number, number, number]`|
+|`vec4`|`[number, number, number, number]`|
 
 ## Contribution
 

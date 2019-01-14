@@ -23,11 +23,7 @@ export interface Varying extends Node {
 }
 
 export default class GPGPU {
-  public static create(): GPGPU {
-    return GPGPU.createWithCanvas(document.createElement('canvas'))
-  }
-
-  public static createWithCanvas(canvas: HTMLCanvasElement): GPGPU {
+  public static create(canvas: HTMLCanvasElement): GPGPU {
     const context = canvas.getContext('webgl2', {
       antialias: false,
     }) as WebGL2RenderingContext
