@@ -54,6 +54,7 @@ void main(){
     vec2: 2,
     vec3: 3,
     vec4: 4,
+    mat2: 4,
   }
 
   private static bytesPerElementMap = {
@@ -62,6 +63,7 @@ void main(){
     vec2: Float32Array.BYTES_PER_ELEMENT,
     vec3: Float32Array.BYTES_PER_ELEMENT,
     vec4: Float32Array.BYTES_PER_ELEMENT,
+    mat2: Float32Array.BYTES_PER_ELEMENT,
   }
 
   private static ArrayBufferMap = {
@@ -70,6 +72,7 @@ void main(){
     vec2: Float32Array,
     vec3: Float32Array,
     vec4: Float32Array,
+    mat2: Float32Array,
   }
 
   protected program: WebGLProgram
@@ -85,6 +88,10 @@ void main(){
     vec2: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec3: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec4: (location: WebGLUniformLocation | null, v: Float32List) => void
+    mat2: (
+      location: WebGLUniformLocation | null,
+      value: Float32Array | GLfloat,
+    ) => void
   }
 
   constructor(protected gl: WebGL2RenderingContext) {
@@ -105,6 +112,10 @@ void main(){
       vec2: this.gl.uniform2fv.bind(this.gl),
       vec3: this.gl.uniform3fv.bind(this.gl),
       vec4: this.gl.uniform4fv.bind(this.gl),
+      mat2: (
+        location: WebGLUniformLocation | null,
+        value: Float32Array | GLfloat,
+      ) => this.gl.uniformMatrix2fv(location, false, value),
     }
   }
 
@@ -177,7 +188,6 @@ void main(){
             this.program,
             attribute.name,
           )
-          this.gl.enableVertexAttribArray(location)
           this.gl.bindAttribLocation(this.program, location, attribute.name)
           return {
             ...attribute,
@@ -251,6 +261,7 @@ void main(){
         const attribute = attributes[i]
         drawCount = Math.max(drawCount, attribute.length)
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer)
+        this.gl.enableVertexAttribArray(location)
         this.gl.vertexAttribPointer(location, dim, this.gl.FLOAT, false, 0, 0)
         this.gl.bufferData(
           this.gl.ARRAY_BUFFER,
@@ -301,6 +312,7 @@ void main(){
           this.gl.bindBufferBase(this.gl.TRANSFORM_FEEDBACK_BUFFER, i, null)
           this.gl.bindBuffer(this.gl.ARRAY_BUFFER, feedback)
           const values = Array.from(new Array(drawCount)).map((_, j) => {
+            console.log('->', bytesPerElement, dim, j)
             const buf = new ArrayBuffer(dim)
             this.gl.getBufferSubData(
               this.gl.ARRAY_BUFFER,

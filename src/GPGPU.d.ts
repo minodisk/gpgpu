@@ -295,6 +295,12 @@ export interface WebGL2RenderingContext extends WebGLRenderingContext {
     dstOffset?: GLuint,
     length?: GLuint,
   ): void
+
+  uniformMatrix2fv(
+    location: WebGLUniformLocation | null,
+    transpose: GLboolean,
+    value: Float32Array | GLfloat,
+  ): void
 }
 
 export type WebGLTransformFeedback = void
