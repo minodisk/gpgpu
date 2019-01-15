@@ -78,14 +78,17 @@ Binds uniform values.
 
 Execute GLSL program with `attributes` and returns transformed results.
 
-## Types
+## Mappable Types
 
-|GLSL Type|JavaScript Type|
-|:--|:--|
-|`int`,`float`|`number`|
-|`vec2`|`[number, number]`|
-|`vec3`|`[number, number, number]`|
-|`vec4`|`[number, number, number, number]`|
+|GLSL Type|JavaScript Type|`uniform`|`attribute`|`varying`|
+|:--|:--|:-:|:-:|:-:|
+|`int`,`float`|`number`|✔|✔|✔|
+|`vec2`|`[number, number]`|✔|✔|✔|
+|`vec3`|`[number, number, number]`|✔|✔|✔|
+|`vec4`|`[number, number, number, number]`|✔|✔|✔|
+|`mat2`|`[number, number, number, number]`|✔||✔|
+|`mat3`|`[number, number, number, number, number, number, number, number, number]`|✔||✔|
+|`mat4`|`[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]`|✔||✔|
 
 ## Contribution
 
