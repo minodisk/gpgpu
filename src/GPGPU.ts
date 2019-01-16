@@ -55,6 +55,8 @@ void main(){
     vec3: 3,
     vec4: 4,
     mat2: 4,
+    mat3: 9,
+    mat4: 16,
   }
 
   private static bytesPerElementMap = {
@@ -64,6 +66,8 @@ void main(){
     vec3: Float32Array.BYTES_PER_ELEMENT,
     vec4: Float32Array.BYTES_PER_ELEMENT,
     mat2: Float32Array.BYTES_PER_ELEMENT,
+    mat3: Float32Array.BYTES_PER_ELEMENT,
+    mat4: Float32Array.BYTES_PER_ELEMENT,
   }
 
   private static ArrayBufferMap = {
@@ -73,6 +77,8 @@ void main(){
     vec3: Float32Array,
     vec4: Float32Array,
     mat2: Float32Array,
+    mat3: Float32Array,
+    mat4: Float32Array,
   }
 
   protected program: WebGLProgram
@@ -88,10 +94,9 @@ void main(){
     vec2: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec3: (location: WebGLUniformLocation | null, v: Float32List) => void
     vec4: (location: WebGLUniformLocation | null, v: Float32List) => void
-    mat2: (
-      location: WebGLUniformLocation | null,
-      value: Float32Array | GLfloat,
-    ) => void
+    mat2: (location: WebGLUniformLocation | null, value: Float32List) => void
+    mat3: (location: WebGLUniformLocation | null, value: Float32List) => void
+    mat4: (location: WebGLUniformLocation | null, value: Float32List) => void
   }
 
   constructor(protected gl: WebGL2RenderingContext) {
@@ -112,10 +117,12 @@ void main(){
       vec2: this.gl.uniform2fv.bind(this.gl),
       vec3: this.gl.uniform3fv.bind(this.gl),
       vec4: this.gl.uniform4fv.bind(this.gl),
-      mat2: (
-        location: WebGLUniformLocation | null,
-        value: Float32Array | GLfloat,
-      ) => this.gl.uniformMatrix2fv(location, false, value),
+      mat2: (location: WebGLUniformLocation | null, value: Float32List) =>
+        this.gl.uniformMatrix2fv(location, false, value),
+      mat3: (location: WebGLUniformLocation | null, value: Float32List) =>
+        this.gl.uniformMatrix3fv(location, false, value),
+      mat4: (location: WebGLUniformLocation | null, value: Float32List) =>
+        this.gl.uniformMatrix4fv(location, false, value),
     }
   }
 
