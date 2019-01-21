@@ -230,25 +230,23 @@ describe(`GPGPU`, () => {
           code: `
           uniform mat3 uni1;
           uniform mat3 uni2;
-          in vec3 in1;
-          in vec3 in2;
-          in vec3 in3;
+          in mat3 in1;
+          in mat3 in2;
           out mat3 out1;
           out mat3 out2;
           void main(void) {
-            out1 = uni1 + mat3(in1, in2, in3);
-            out2 = uni2 + out1;
+            out1 = uni1 + in1;
+            out2 = uni2 + out1 + in2;
           }
           `,
           uniforms: [[1, 1, 1, 1, 1, 1, 1, 1, 1], [3, 9, 2, 1, 4, 8, 7, 1, 5]],
           attributes: [
-            [[1, 2, 3], [8, 3, 7]],
-            [[9, 2, 1], [7, 4, 6]],
-            [[4, 5, 1], [9, 1, 2]],
+            [[1, 9, 4, 2, 2, 5, 3, 1, 1]],
+            [[8, 7, 9, 3, 4, 1, 7, 6, 2]],
           ],
           expected: [
-            [[2, 3, 4, 10, 3, 2, 5, 6, 2], [9, 4, 8, 8, 5, 7, 10, 2, 3]],
-            [[5, 12, 6, 11, 7, 10, 12, 7, 7], [12, 7, 10, 9, 9, 15, 17, 3, 8]],
+            [[2, 10, 5, 3, 3, 6, 4, 2, 2]],
+            [[14, 26, 16, 7, 11, 15, 18, 9, 9]],
           ],
         },
       ].forEach(c =>
